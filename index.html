@@ -319,7 +319,7 @@ footer p{font-size:13px;color:var(--muted);}
           <label>Tell me about your business</label>
           <textarea name="message" rows="4" placeholder="What do you do, where are you located, and what's your biggest challenge right now?"></textarea>
         </div>
-        <button type="submit" data-fs-submit-btn style="margin-top:1rem;">Send message →</button>
+        <button type="submit" id="submit-btn" style="margin-top:1rem;">Send message →</button>
       </form>
     </div>
   </div>
@@ -333,6 +333,56 @@ footer p{font-size:13px;color:var(--muted);}
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 
+
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var btn = document.getElementById('submit-btn');
+  var name = this.querySelector('[name="name"]').value.trim();
+  var contact = this.querySelector('[name="contact"]').value.trim();
+  if (!name || !contact) {
+    var err = document.getElementById('form-error');
+    err.textContent = 'Please fill in your name and contact info.';
+    err.style.display = 'block';
+    return;
+  }
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  var biz = this.querySelector('[name="business"]').value.trim() || 'Not provided';
+  var service = this.querySelector('[name="service"]').value || 'Not specified';
+  var msg = this.querySelector('[name="message"]').value.trim() || 'No message provided';
+  var data = {
+    _subject: '🔔 New inquiry from ' + name + (biz !== 'Not provided' ? ' — ' + biz : ''),
+    name: name,
+    business: biz,
+    contact: contact,
+    service: service,
+    message: msg,
+    _template: 'table'
+  };
+  try {
+    var res = await fetch('https://formspree.io/f/xaqawwpq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      document.getElementById('contact-form').style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    } else {
+      btn.textContent = 'Send message →';
+      btn.disabled = false;
+      var err = document.getElementById('form-error');
+      err.textContent = 'Something went wrong. Please email ridda0527@gmail.com directly.';
+      err.style.display = 'block';
+    }
+  } catch(e) {
+    btn.textContent = 'Send message →';
+    btn.disabled = false;
+    var err = document.getElementById('form-error');
+    err.textContent = 'Something went wrong. Please email ridda0527@gmail.com directly.';
+    err.style.display = 'block';
+  }
+});
 
 if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) {
 var cursor = document.getElementById('cursor');
